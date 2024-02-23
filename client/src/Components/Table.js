@@ -3,24 +3,25 @@ import axios from "axios";
 import { useState } from "react";
 import { Button } from "flowbite-react";
 import { useNavigate } from "react-router-dom";
+import { imgbook } from "../Bookmark-PNG-File.png";
+import { FaRegHeart } from "react-icons/fa";
 
 export default function Table() {
   const navigate = useNavigate();
 
+  const [originalBooks, setOriginalBooks] = useState([]);
+  const [readstatus, setReadstatus] = useState(false);
   const [books, setBooks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const backend = `${process.env.REACT_APP_BACKROOT}?page=${currentPage}urlspecified`;
-
-  console.log(backend);
-
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKROOT}?page=${currentPage}`);
-        console.log(response);
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKROOT}?page=${currentPage}`
+        );
+        setOriginalBooks(response.data);
         setBooks(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -30,10 +31,9 @@ export default function Table() {
     fetchData();
   }, [currentPage]);
 
-  console.log(books);
-
-  const handleSearch = () => {
-    const filteredData = books.filter((item) => {
+  const handleSearch = (e) => {
+    e.preventDefault(); // Prevent form submission and page refresh
+    const filteredData = originalBooks.filter((item) => {
       return (
         item.bookname.toLowerCase().includes(search.toLowerCase()) ||
         item.author.toLowerCase().includes(search.toLowerCase()) ||
@@ -42,6 +42,11 @@ export default function Table() {
     });
 
     setBooks(filteredData);
+  };
+
+  const handleRemoveSearch = () => {
+    setSearch("");
+    setBooks(originalBooks);
   };
 
   const handlePreviousPage = () => {
@@ -57,19 +62,37 @@ export default function Table() {
     }
   };
 
+  const handlereadstatus = async (readstatus , bookid) => {
+    try {
+      const response = await axios.post(`/api/reading/${bookid}`, {
+        readstatus: true,
+      });
+  
+      if (response.status === 200) {
+        console.log(`Read status updated for book with ID ${bookid}`);
+        // Update your frontend state as needed
+      } else {
+        console.error("Error updating read status:", response.data.message);
+      }
+    } catch (error) {
+      console.error("AxiosError:", error);
+    }
+  };
+  
+
   return (
     <div className="m-10">
-      <form class="mb-10">
+      <form className="mb-10" onSubmit={handleSearch}>
         <label
-          for="default-search"
-          class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white"
+          htmlFor="default-search"
+          className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white"
         >
           Search
         </label>
-        <div class="relative">
-          <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+        <div className="relative">
+          <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
             <svg
-              class="w-4 h-4 text-gray-500 dark:text-gray-400"
+              className="w-4 h-4 text-gray-500 dark:text-gray-400"
               aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -77,9 +100,9 @@ export default function Table() {
             >
               <path
                 stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
                 d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
               />
             </svg>
@@ -87,18 +110,26 @@ export default function Table() {
           <input
             type="search"
             id="default-search"
-            class="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            className="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search Bookname , Authors or Genre"
+            placeholder="Search Bookname, Authors, or Genre"
             required
           />
           <button
             type="submit"
-            class="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            onClick={handleSearch}
+            className="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           >
             Search
           </button>
+          {search && (
+            <button
+              type="button"
+              className="text-white absolute end-20 mr-10 bottom-2.5 bg-red-500 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800"
+              onClick={handleRemoveSearch}
+            >
+              Clear Search
+            </button>
+          )}
         </div>
       </form>
 
@@ -119,12 +150,15 @@ export default function Table() {
                 Language
               </th>
               <th scope="col" class="px-6 py-3">
-                PublishDate
+                Published Date
+              </th>
+              <th scope="col" class="px-6 py-3">
+                Read Status
               </th>
             </tr>
           </thead>
           <tbody>
-            {books.map((book) => (
+            {books.map((book, index) => (
               <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                 <th
                   scope="row"
@@ -133,10 +167,29 @@ export default function Table() {
                   {book.bookname}
                 </th>
                 <td class="px-6 py-4">{book.author}</td>
+                <td class="px-6 py-4">
+                  <button>
+                    <FaRegHeart className="bg-transperant hover:bg-red-500" />
+                  </button>
+                </td>
                 <td class="px-6 py-4">{book.genre}</td>
                 <td class="px-6 py-4">{book.language}</td>
                 <td class="px-6 py-4">
                   {new Date(book.publishdate).toLocaleDateString()}
+                </td>
+                <td class="px-6 py-4">
+                  {book.readstatus === true ? (
+                    "Reading"
+                  ) : (
+                    <button
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                      onClick={() =>
+                        handlereadstatus(book.readstatus , book._id)
+                      }
+                    >
+                      Not Read
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
