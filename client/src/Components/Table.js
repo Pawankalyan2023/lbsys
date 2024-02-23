@@ -62,12 +62,12 @@ export default function Table() {
     }
   };
 
-  const handlereadstatus = async (readstatus , bookid) => {
+  const handlereadstatus = async (readstatus, bookid) => {
     try {
       const response = await axios.post(`/api/reading/${bookid}`, {
         readstatus: true,
       });
-  
+
       if (response.status === 200) {
         console.log(`Read status updated for book with ID ${bookid}`);
         // Update your frontend state as needed
@@ -78,7 +78,6 @@ export default function Table() {
       console.error("AxiosError:", error);
     }
   };
-  
 
   return (
     <div className="m-10">
@@ -147,6 +146,9 @@ export default function Table() {
                 Genre
               </th>
               <th scope="col" class="px-6 py-3">
+                Likes
+              </th>
+              <th scope="col" class="px-6 py-3">
                 Language
               </th>
               <th scope="col" class="px-6 py-3">
@@ -184,7 +186,7 @@ export default function Table() {
                     <button
                       className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                       onClick={() =>
-                        handlereadstatus(book.readstatus , book._id)
+                        handlereadstatus(book.readstatus, book._id)
                       }
                     >
                       Not Read

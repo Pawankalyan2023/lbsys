@@ -13,6 +13,28 @@ const Specific = () => {
   const [publishdate, setDate] = useState("");
 
   const handlesubmit = () => {
+    if (
+      bookname === "" ||
+      author === "" ||
+      genre === "" ||
+      language === "" ||
+      publishdate === ""
+    ) {
+      alert("Please fill all the fields");
+      return;
+    }
+
+    if (
+      bookname < 3 ||
+      author < 3 ||
+      genre < 3 ||
+      language < 3 ||
+      publishdate < 3
+    ) {
+      alert("Please enter the data correctly");
+      return;
+    }
+
     try {
       const response = axios.post(
         `${process.env.REACT_APP_BACKROOT}/api/addbook`,
